@@ -11,6 +11,13 @@ const sanitize = name => name
   .replace(/[^\w\-.@\/]/g, '')
   .replace(/[^\w]$/, '');   // Ends by a letter, number or underscore
 
+// From a given package name, return a valid folder name, 
+// replacing `@` and `/` characters found in "scoped packages" such as `@cycle/core`
+const packageNameToFolderName = name =>
+  name
+    .replace('/', '--')
+    .replace('@', 'at-');  
+
 module.exports = async packages => {
   if (!packages || !packages.length) return './node_modules';
 
@@ -24,7 +31,11 @@ module.exports = async packages => {
   }
 
   // Create an empty namespaced temporary folder
-  const tmp = join(tmpdir(), 'legally', 'pack-' + packages.join('-'));
+  const tmp = join(
+    tmpdir(),
+    'legally',
+    'pack-' + packages.map(packageNameToFolderName).join('-')
+  );
 
   // It is already cached, so we don't need to worry about it
   if (await exists(tmp) && new Date() - await stat(tmp).atime < CACHE) {
